@@ -25,7 +25,8 @@ public class BackupService {
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
+        return null;
     }
 }

@@ -1,4 +1,4 @@
 package baseAPI.API.Sistema.DTO;
 
-public record ReparoDTO(String descrisao) {
+public record ReparoDTO(String descrisao,Double valortotalReparo) {
 }

@@ -5,9 +5,12 @@ import baseAPI.API.Sistema.DTO.ColaboradorDTO;
 import baseAPI.API.Sistema.DTO.EnderecoDTO;
 import baseAPI.API.Sistema.DTO.FornecedorDTO;
 import baseAPI.API.Sistema.Enum.SelecionarAcaoBackup;
+import baseAPI.API.Sistema.Exceptions.EntityNotFoundException;
+import baseAPI.API.Sistema.Exceptions.NullargumentsException;
 import baseAPI.API.Sistema.Model.*;
 import baseAPI.API.Sistema.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,7 +45,8 @@ public class ColaoradorService {
     @Autowired
     BackupRepository backupRepository;
 
-    private static String caminhoImagem = "D:\\PROJETOS JAVA\\PROJETOS\\api_Assistencia_Tecnica\\API\\Upload\\Documntos\\";
+    @Value("${App.caminhoImagem}")
+    private static String caminhoImagem;
 
     public ResponseEntity<List<Colaborador>> listarColaboradores() throws Exception
     {
@@ -52,42 +56,61 @@ public class ColaoradorService {
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
-        }
-    }
-
-    public ResponseEntity<Colaborador> BuscarColaboradoresPorId(Long id) throws Exception
-    {
-        try
-        {
-            if(colaboradorRepository.existsById(id))
-            {
-                Colaborador colaborador = colaboradorRepository.findById(id).get();
-                return new ResponseEntity<>(colaborador, OK);
-            }
-
-        }
-        catch (Exception e)
-        {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
         return null;
     }
 
-    public ResponseEntity<Colaborador> BuscarColaboradoresPorCpf(Long cpf) throws Exception
+    public ResponseEntity<ColaboradorDTO> BuscarColaboradoresPorId(Long id) throws Exception
     {
         try
         {
-            if(colaboradorRepository.existsBycpf(cpf))
+            if (id != null)
             {
-                Colaborador colaborador = colaboradorRepository.findBycpf(cpf);
-                return new ResponseEntity<>(colaborador, OK);
+                if(colaboradorRepository.existsById(id))
+                {
+                    Colaborador colaborador = colaboradorRepository.findById(id).get();
+                    ColaboradorDTO response = new ColaboradorDTO(colaborador.getNome(), colaborador.getSobrenome(), colaborador.getCpf(),
+                            colaborador.getTelefone(), colaborador.getDataNascimento(),colaborador.getEmail(),colaborador.getEndereco().getLogradouro(),
+                            colaborador.getEndereco().getNumero(),colaborador.getEndereco().getBairro(),colaborador.getEndereco().getCep(),
+                            colaborador.getEndereco().getCidade(),colaborador.getEndereco().getEstado(),colaborador.getCargo().getDepartamento(),
+                            colaborador.getCargo().getNome(),colaborador.getCargo().getDescrisao(),colaborador.getCargo().getSalario(),colaborador.getDataEntrada());
+                    return new ResponseEntity<>(response, OK);
+                }
+                { throw new EntityNotFoundException(); }
             }
-
+            { throw new NullargumentsException(); }
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
+        }
+        return null;
+    }
+
+    public ResponseEntity<ColaboradorDTO> BuscarColaboradoresPorCpf(Long cpf) throws Exception
+    {
+        try
+        {
+            if (cpf != null)
+            {
+                if(colaboradorRepository.existsBycpf(cpf))
+                {
+                    Colaborador colaborador = colaboradorRepository.findBycpf(cpf);
+                    ColaboradorDTO response = new ColaboradorDTO(colaborador.getNome(), colaborador.getSobrenome(), colaborador.getCpf(),
+                            colaborador.getTelefone(), colaborador.getDataNascimento(), colaborador.getEmail(), colaborador.getEndereco().getLogradouro(),
+                            colaborador.getEndereco().getNumero(), colaborador.getEndereco().getBairro(), colaborador.getEndereco().getCep(),
+                            colaborador.getEndereco().getCidade(), colaborador.getEndereco().getEstado(), colaborador.getCargo().getDepartamento(),
+                            colaborador.getCargo().getNome(), colaborador.getCargo().getDescrisao(), colaborador.getCargo().getSalario(), colaborador.getDataEntrada());
+                    return new ResponseEntity<>(response, OK);
+                }
+                { throw new EntityNotFoundException(); }
+            }
+            else
+            { throw new NullargumentsException(); }
+        }catch (Exception e)
+        {
+            e.getMessage();
         }
         return null;
     }
@@ -95,7 +118,7 @@ public class ColaoradorService {
     public ResponseEntity<ColaboradorDTO> NovoColaborador(ColaboradorDTO dto, MultipartFile[] files) throws SQLException, IOException
     {
         try{
-            if(dto != null)
+            if(dto != null && files != null)
             {
                 Colaborador colaborador = new Colaborador(dto);
                 Cargo cargo = new Cargo(dto);
@@ -124,125 +147,144 @@ public class ColaoradorService {
                 backup.setDataEvento(LocalDateTime.now());
                 backup.setColaborador(colaborador);
                 backupRepository.save(backup);
-                return new ResponseEntity<>(CREATED);
+                ColaboradorDTO response = new ColaboradorDTO(colaborador.getNome(), colaborador.getSobrenome(), colaborador.getCpf(),
+                        colaborador.getTelefone(), colaborador.getDataNascimento(),colaborador.getEmail(),colaborador.getEndereco().getLogradouro(),
+                        colaborador.getEndereco().getNumero(),colaborador.getEndereco().getBairro(),colaborador.getEndereco().getCep(),
+                        colaborador.getEndereco().getCidade(),colaborador.getEndereco().getEstado(),colaborador.getCargo().getDepartamento(),
+                        colaborador.getCargo().getNome(),colaborador.getCargo().getDescrisao(),colaborador.getCargo().getSalario(),colaborador.getDataEntrada());
+                return new ResponseEntity<>(response, CREATED);
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            { throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
 
     public ResponseEntity<ColaboradorDTO> AlterarCargoColaborador(Long id,CargoDTO dto)
     {
-        try{
-            if(colaboradorRepository.existsById(id))
+        try
+        {
+            if(id != null && dto != null)
             {
-                Colaborador colaborador = colaboradorRepository.findById(id).get();
-                if(cargoRepository.existsById(colaborador.getCargo().getId()))
+                if (colaboradorRepository.existsById(id))
                 {
-                    Cargo cargo = cargoRepository.findById(colaborador.getCargo().getId()).get();
-                    cargo.setNome(dto.nome());
-                    cargo.setDepartamento(dto.departamento());
-                    cargo.setDescrisao(dto.descrisao());
-                    cargo.setSalario(dto.salario());
-                    cargoRepository.save(cargo);
+                    Colaborador colaborador = colaboradorRepository.findById(id).get();
+                    if (cargoRepository.existsById(colaborador.getCargo().getId())) {
+                        Cargo cargo = cargoRepository.findById(colaborador.getCargo().getId()).get();
+                        cargo.setNome(dto.nome());
+                        cargo.setDepartamento(dto.departamento());
+                        cargo.setDescrisao(dto.descrisao());
+                        cargo.setSalario(dto.salario());
+                        cargoRepository.save(cargo);
+                    }
+                    Backup backup = new Backup();
+                    backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_COLABORADOR);
+                    backup.setDataEvento(LocalDateTime.now());
+                    backup.setColaborador(colaborador);
+                    backupRepository.save(backup);
+                    ColaboradorDTO response = new ColaboradorDTO(colaborador.getNome(), colaborador.getSobrenome(), colaborador.getCpf(),
+                            colaborador.getTelefone(), colaborador.getDataNascimento(), colaborador.getEmail(), colaborador.getEndereco().getLogradouro(),
+                            colaborador.getEndereco().getNumero(), colaborador.getEndereco().getBairro(), colaborador.getEndereco().getCep(),
+                            colaborador.getEndereco().getCidade(), colaborador.getEndereco().getEstado(), colaborador.getCargo().getDepartamento(),
+                            colaborador.getCargo().getNome(), colaborador.getCargo().getDescrisao(), colaborador.getCargo().getSalario(), colaborador.getDataEntrada());
+                    return new ResponseEntity<>(response, OK);
                 }
-                Backup backup = new Backup();
-                backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_COLABORADOR);
-                backup.setDataEvento(LocalDateTime.now());
-                backup.setColaborador(colaborador);
-                backupRepository.save(backup);
-                return new ResponseEntity<>(OK);
+                { throw new EntityNotFoundException();}
             }
             else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            { throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
 
-    public ResponseEntity<ColaboradorDTO> AdicionarArquivoColaborador(Long id,MultipartFile[] files)
+    public ResponseEntity<ColaboradorDTO> AdicionarArquivoColaborador(Long id,MultipartFile[] files) throws IOException
     {
-        try{
-            if(colaboradorRepository.existsById(id))
+        try
+        {
+            if(id != null && files != null)
             {
-                Colaborador colaborador = colaboradorRepository.findById(id).get();
-                if(documentosRepository.existsById(colaborador.getDocumentos().getId()))
+                if (colaboradorRepository.existsById(id))
                 {
-                    Documentos documentos = documentosRepository.findById(colaborador.getDocumentos().getId()).get();
-                    List<String> arquivos = new ArrayList<>();
-                    for(MultipartFile file: files)
+                    Colaborador colaborador = colaboradorRepository.findById(id).get();
+                    if (documentosRepository.existsById(colaborador.getDocumentos().getId()))
                     {
-                        byte[] bytes = file.getBytes();
-                        Path caminho = Paths.get(caminhoImagem+colaborador.getNome()+"_"+colaborador.getCargo()+"\\"+colaborador.getNome()+"_"+colaborador.getCargo()+"_"+file.getOriginalFilename());
-                        Files.write(caminho, bytes);
-                        arquivos.add(colaborador.getNome()+"_"+colaborador.getCargo()+"_"+file.getOriginalFilename());
+                        Documentos documentos = documentosRepository.findById(colaborador.getDocumentos().getId()).get();
+                        List<String> arquivos = new ArrayList<>();
+                        for (MultipartFile file : files)
+                        {
+                            byte[] bytes = file.getBytes();
+                            Path caminho = Paths.get(caminhoImagem + colaborador.getNome() + "_" + colaborador.getCargo() + "\\" + colaborador.getNome() + "_" + colaborador.getCargo() + "_" + file.getOriginalFilename());
+                            Files.write(caminho, bytes);
+                            arquivos.add(colaborador.getNome() + "_" + colaborador.getCargo() + "_" + file.getOriginalFilename());
+                        }
+                        arquivos.forEach(arquivo -> documentos.getArquivos().add(arquivo));
+                        documentosRepository.save(documentos);
+                        Backup backup = new Backup();
+                        backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_COLABORADOR);
+                        backup.setDataEvento(LocalDateTime.now());
+                        backup.setColaborador(colaborador);
+                        backupRepository.save(backup);
+                        ColaboradorDTO response = new ColaboradorDTO(colaborador.getNome(), colaborador.getSobrenome(), colaborador.getCpf(),
+                                colaborador.getTelefone(), colaborador.getDataNascimento(), colaborador.getEmail(), colaborador.getEndereco().getLogradouro(),
+                                colaborador.getEndereco().getNumero(), colaborador.getEndereco().getBairro(), colaborador.getEndereco().getCep(),
+                                colaborador.getEndereco().getCidade(), colaborador.getEndereco().getEstado(), colaborador.getCargo().getDepartamento(),
+                                colaborador.getCargo().getNome(), colaborador.getCargo().getDescrisao(), colaborador.getCargo().getSalario(), colaborador.getDataEntrada());
+                        return new ResponseEntity<>(response, OK);
                     }
-                    arquivos.forEach(arquivo -> documentos.getArquivos().add(arquivo));
-                    documentosRepository.save(documentos);
-                    Backup backup = new Backup();
-                    backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_COLABORADOR);
-                    backup.setDataEvento(LocalDateTime.now());
-                    backup.setColaborador(colaborador);
-                    backupRepository.save(backup);
-                    return new ResponseEntity<>(OK);
+                    else { throw new EntityNotFoundException();}
                 }
+                else { throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else { throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+
         }
         return null;
     }
 
-    public ResponseEntity<ColaboradorDTO> AlterarEnderecoColaborador(Long id,EnderecoDTO dto, MultipartFile file) throws SQLException, IOException
+    public ResponseEntity<ColaboradorDTO> AlterarEnderecoColaborador(Long id,EnderecoDTO dto, MultipartFile file) throws SQLException
     {
         try{
-            if(colaboradorRepository.existsById(id))
+            if(id != null && dto != null && file != null)
             {
-                Colaborador colaborador = colaboradorRepository.findById(id).get();
-                if(enderecoRepository.existsById(colaborador.getEndereco().getId()))
+                if(colaboradorRepository.existsById(id))
                 {
-                    Endereco endereco = enderecoRepository.findById(colaborador.getEndereco().getId()).get();
-                    endereco.setLogradouro(dto.Logradouro());
-                    endereco.setNumero(dto.numero());
-                    endereco.setBairro(dto.bairro());
-                    endereco.setCep(dto.cep());
-                    endereco.setCidade(dto.cidade());
-                    endereco.setEstado(dto.estado());
-                    enderecoRepository.save(endereco);
-                    Backup backup = new Backup();
-                    backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_COLABORADOR);
-                    backup.setDataEvento(LocalDateTime.now());
-                    backup.setColaborador(colaborador);
-                    backupRepository.save(backup);
-                    return new ResponseEntity<>(OK);
+                    Colaborador colaborador = colaboradorRepository.findById(id).get();
+                    if(enderecoRepository.existsById(colaborador.getEndereco().getId()))
+                    {
+                        Endereco endereco = enderecoRepository.findById(colaborador.getEndereco().getId()).get();
+                        endereco.setLogradouro(dto.Logradouro());
+                        endereco.setNumero(dto.numero());
+                        endereco.setBairro(dto.bairro());
+                        endereco.setCep(dto.cep());
+                        endereco.setCidade(dto.cidade());
+                        endereco.setEstado(dto.estado());
+                        enderecoRepository.save(endereco);
+                        Backup backup = new Backup();
+                        backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_COLABORADOR);
+                        backup.setDataEvento(LocalDateTime.now());
+                        backup.setColaborador(colaborador);
+                        backupRepository.save(backup);
+                        ColaboradorDTO response = new ColaboradorDTO(colaborador.getNome(), colaborador.getSobrenome(), colaborador.getCpf(),
+                                colaborador.getTelefone(), colaborador.getDataNascimento(),colaborador.getEmail(),colaborador.getEndereco().getLogradouro(),
+                                colaborador.getEndereco().getNumero(),colaborador.getEndereco().getBairro(),colaborador.getEndereco().getCep(),
+                                colaborador.getEndereco().getCidade(),colaborador.getEndereco().getEstado(),colaborador.getCargo().getDepartamento(),
+                                colaborador.getCargo().getNome(),colaborador.getCargo().getDescrisao(),colaborador.getCargo().getSalario(),colaborador.getDataEntrada());
+                        return new ResponseEntity<>(response,OK);
                     }
                 }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
+                else { throw new EntityNotFoundException();}
             }
+            else { throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
@@ -251,16 +293,22 @@ public class ColaoradorService {
     {
         try
         {
-            if(colaboradorRepository.existsById(id))
+            if(id != null)
             {
-                colaboradorRepository.deleteById(id);
+                if(colaboradorRepository.existsById(id))
+                {
+                    colaboradorRepository.deleteById(id);
+                    return new ResponseEntity<>(OK);
+                }
+                else { throw new EntityNotFoundException();}
             }
-            return new ResponseEntity<>(OK);
+            else { throw new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao deletar");
+            e.getMessage();
         }
+        return null;
     }
 
 }

@@ -43,7 +43,7 @@ public class FornecedorController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarClientePorId")
-    public ResponseEntity<Fornecedor> BuscarClientePorId(@RequestParam Long id) throws Exception
+    public ResponseEntity<FornecedorDTO> BuscarClientePorId(@RequestParam Long id) throws Exception
     { return service.BuscarClientePorId(id);}
 
     @Operation(summary = "Busca Registro da tabela por CNPJ", method = "GET")
@@ -54,7 +54,7 @@ public class FornecedorController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarClientePorCnpj")
-    public ResponseEntity<Fornecedor> BuscarClientePorCnpj(@RequestParam Long cnpj) throws Exception
+    public ResponseEntity<FornecedorDTO> BuscarClientePorCnpj(@RequestParam Long cnpj) throws Exception
     { return service.BuscarClientePorCnpj(cnpj);}
 
 

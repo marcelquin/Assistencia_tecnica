@@ -42,7 +42,7 @@ public class ClienteController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarClientePorId")
-    public ResponseEntity<Cliente> BuscarClientePorId(@RequestParam Long id) throws Exception
+    public ResponseEntity<ClienteDTO> BuscarClientePorId(@RequestParam Long id) throws Exception
     { return service.BuscarClientePorId(id);}
 
     @Operation(summary = "Busca Registro da tabela por Nome", method = "GET")
@@ -53,7 +53,7 @@ public class ClienteController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarClientePorNome")
-    public ResponseEntity<Cliente> BuscarClientePorNome(@RequestParam String nome) throws Exception
+    public ResponseEntity<ClienteDTO> BuscarClientePorNome(@RequestParam String nome) throws Exception
     { return service.BuscarClientePorNome(nome);}
 
     @Operation(summary = "Busca Registro da tabela por Telefone", method = "GET")
@@ -64,7 +64,7 @@ public class ClienteController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarClientePorTelefone")
-    public ResponseEntity<Cliente> BuscarClientePorTelefone(@RequestParam Long telefone) throws Exception
+    public ResponseEntity<ClienteDTO> BuscarClientePorTelefone(@RequestParam Long telefone) throws Exception
     {return service.BuscarClientePorTelefone(telefone);}
 
     @Operation(summary = "Salva Novo Registro na tabela", method = "POST")

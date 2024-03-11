@@ -4,6 +4,8 @@ import baseAPI.API.Sistema.DTO.ClienteDTO;
 import baseAPI.API.Sistema.DTO.ClienteEdtDTO;
 import baseAPI.API.Sistema.DTO.EnderecoDTO;
 import baseAPI.API.Sistema.Enum.SelecionarAcaoBackup;
+import baseAPI.API.Sistema.Exceptions.EntityNotFoundException;
+import baseAPI.API.Sistema.Exceptions.NullargumentsException;
 import baseAPI.API.Sistema.Model.Backup;
 import baseAPI.API.Sistema.Model.Cliente;
 import baseAPI.API.Sistema.Model.Endereco;
@@ -39,67 +41,93 @@ public class ClienteService {
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
-        }
-    }
-
-    public ResponseEntity<Cliente> BuscarClientePorId(Long id) throws Exception
-    {
-        try
-        {
-            if(clienteRepository.existsById(id))
-            {
-                Cliente cliente = clienteRepository.findById(id).get();
-                return new ResponseEntity<>(cliente, OK);
-            }
-
-        }
-        catch (Exception e)
-        {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
         return null;
     }
 
-    public ResponseEntity<Cliente> BuscarClientePorNome(String nome) throws Exception
+    public ResponseEntity<ClienteDTO> BuscarClientePorId(Long id) throws Exception
     {
         try
         {
-            if(clienteRepository.existsBynome(nome))
+            if(id != null)
             {
-                Cliente cliente = clienteRepository.findBynome(nome);
-                return new ResponseEntity<>(cliente, OK);
+                if(clienteRepository.existsById(id))
+                {
+                    Cliente cliente = clienteRepository.findById(id).get();
+                    ClienteDTO response = new ClienteDTO(cliente.getNome(), cliente.getSobrenome(), cliente.getTelefone(),
+                            cliente.getDataNascimento(), cliente.getEmail(), cliente.getEndereco().getLogradouro(),
+                            cliente.getEndereco().getNumero(),cliente.getEndereco().getBairro(),cliente.getEndereco().getCep(),
+                            cliente.getEndereco().getCidade(),cliente.getEndereco().getEstado() );
+                    return new ResponseEntity<>(response, OK);
+                }
+                else {throw new EntityNotFoundException();}
             }
-
+            else {throw new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
         return null;
     }
 
-    public ResponseEntity<Cliente> BuscarClientePorTelefone(Long telefone) throws Exception
+    public ResponseEntity<ClienteDTO> BuscarClientePorNome(String nome) throws Exception
     {
         try
         {
-            if(clienteRepository.existsBytelefone(telefone))
+            if(nome != null)
             {
-                Cliente cliente = clienteRepository.findBytelefone(telefone);
-                return new ResponseEntity<>(cliente, OK);
+                if(clienteRepository.existsBynome(nome))
+                {
+                    Cliente cliente = clienteRepository.findBynome(nome);
+                    ClienteDTO response = new ClienteDTO(cliente.getNome(), cliente.getSobrenome(), cliente.getTelefone(),
+                            cliente.getDataNascimento(), cliente.getEmail(), cliente.getEndereco().getLogradouro(),
+                            cliente.getEndereco().getNumero(),cliente.getEndereco().getBairro(),cliente.getEndereco().getCep(),
+                            cliente.getEndereco().getCidade(),cliente.getEndereco().getEstado() );
+                    return new ResponseEntity<>(response, OK);
+                }
+                else {throw new EntityNotFoundException();}
             }
-
+            else {throw new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
+        }
+        return null;
+    }
+
+    public ResponseEntity<ClienteDTO> BuscarClientePorTelefone(Long telefone) throws Exception
+    {
+        try
+        {
+            if(telefone != null)
+            {
+                if(clienteRepository.existsBytelefone(telefone))
+                {
+                    Cliente cliente = clienteRepository.findBytelefone(telefone);
+                    ClienteDTO response = new ClienteDTO(cliente.getNome(), cliente.getSobrenome(), cliente.getTelefone(),
+                            cliente.getDataNascimento(), cliente.getEmail(), cliente.getEndereco().getLogradouro(),
+                            cliente.getEndereco().getNumero(),cliente.getEndereco().getBairro(),cliente.getEndereco().getCep(),
+                            cliente.getEndereco().getCidade(),cliente.getEndereco().getEstado() );
+                    return new ResponseEntity<>(response, OK);
+                }
+                else {throw new EntityNotFoundException();}
+            }
+            else {throw new NullargumentsException();}
+        }
+        catch (Exception e)
+        {
+            e.getMessage();
         }
         return null;
     }
 
     public ResponseEntity<ClienteDTO> NovoCliente(ClienteDTO dto) throws Exception
     {
-        try{
+        try
+        {
             if(dto != null)
             {
                 Endereco endereco = new Endereco(dto);
@@ -111,50 +139,49 @@ public class ClienteService {
                 backup.setAcaoBackup(SelecionarAcaoBackup.NOVO_CLIENTE);
                 backup.setCliente(cliente);
                 backupRepository.save(backup);
-                return new ResponseEntity<>(CREATED);
+                ClienteDTO response = new ClienteDTO(cliente.getNome(), cliente.getSobrenome(), cliente.getTelefone(),
+                        cliente.getDataNascimento(), cliente.getEmail(), cliente.getEndereco().getLogradouro(),
+                        cliente.getEndereco().getNumero(),cliente.getEndereco().getBairro(),cliente.getEndereco().getCep(),
+                        cliente.getEndereco().getCidade(),cliente.getEndereco().getEstado() );
+                return new ResponseEntity<>(response,CREATED);
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else {throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
 
     public ResponseEntity<ClienteDTO> AlterarContatoCliente(Long id,Long telefone, String email) throws Exception
     {
-        try{
-            if(clienteRepository.existsById(id))
+        try
+        {
+            if(id != null && telefone != null && email != null)
             {
-                Cliente cliente = clienteRepository.findById(id).get();
-                if(telefone != null)
+                if(clienteRepository.existsById(id))
                 {
+                    Cliente cliente = clienteRepository.findById(id).get();
                     cliente.setTelefone(telefone);
-                }
-                if(email != null)
-                {
                     cliente.setEmail(email);
+                    clienteRepository.save(cliente);
+                    Backup backup = new Backup();
+                    backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_CLIENTE);
+                    backup.setDataEvento(LocalDateTime.now());
+                    backup.setCliente(cliente);
+                    backupRepository.save(backup);
+                    ClienteDTO response = new ClienteDTO(cliente.getNome(), cliente.getSobrenome(), cliente.getTelefone(),
+                            cliente.getDataNascimento(), cliente.getEmail(), cliente.getEndereco().getLogradouro(),
+                            cliente.getEndereco().getNumero(),cliente.getEndereco().getBairro(),cliente.getEndereco().getCep(),
+                            cliente.getEndereco().getCidade(),cliente.getEndereco().getEstado() );
+                    return new ResponseEntity<>(response,OK);
                 }
-                clienteRepository.save(cliente);
-                Backup backup = new Backup();
-                backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_CLIENTE);
-                backup.setDataEvento(LocalDateTime.now());
-                backup.setCliente(cliente);
-                backupRepository.save(backup);
-                return new ResponseEntity<>(OK);
+                else {throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else {throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
@@ -162,59 +189,69 @@ public class ClienteService {
     public ResponseEntity<ClienteDTO> AlterarDadosCliente(Long id, ClienteEdtDTO dto) throws Exception
     {
         try{
-            if(clienteRepository.existsById(id))
+            if(id != null)
             {
-                Cliente cliente = clienteRepository.findById(id).get();
-                cliente.setNome(dto.nome());
-                cliente.setSobrenome(dto.sobrenome());
-                cliente.setTelefone(dto.telefone());
-                cliente.setDataNascimento(dto.dataNascimento());
-                cliente.setEmail(dto.email());
-                clienteRepository.save(cliente);
-                Backup backup = new Backup();
-                backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_CLIENTE);
-                backup.setDataEvento(LocalDateTime.now());
-                backup.setCliente(cliente);
-                backupRepository.save(backup);
-                return new ResponseEntity<>(OK);
+                if(clienteRepository.existsById(id))
+                {
+                    Cliente cliente = clienteRepository.findById(id).get();
+                    cliente.setNome(dto.nome());
+                    cliente.setSobrenome(dto.sobrenome());
+                    cliente.setTelefone(dto.telefone());
+                    cliente.setDataNascimento(dto.dataNascimento());
+                    cliente.setEmail(dto.email());
+                    clienteRepository.save(cliente);
+                    Backup backup = new Backup();
+                    backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_CLIENTE);
+                    backup.setDataEvento(LocalDateTime.now());
+                    backup.setCliente(cliente);
+                    backupRepository.save(backup);
+                    ClienteDTO response = new ClienteDTO(cliente.getNome(), cliente.getSobrenome(), cliente.getTelefone(),
+                            cliente.getDataNascimento(), cliente.getEmail(), cliente.getEndereco().getLogradouro(),
+                            cliente.getEndereco().getNumero(),cliente.getEndereco().getBairro(),cliente.getEndereco().getCep(),
+                            cliente.getEndereco().getCidade(),cliente.getEndereco().getEstado() );
+                    return new ResponseEntity<>(response,OK);
+                }
+                else {throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else {throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+           e.getMessage();
         }
         return null;
     }
 
     public ResponseEntity<ClienteDTO> AlterarEnderecoCliente(Long id, EnderecoDTO dto) throws Exception
     {
-        try{
-            if(clienteRepository.existsById(id))
+        try
+        {
+            if(id != null && dto != null)
             {
-                Cliente cliente = clienteRepository.findById(id).get();
-                Endereco endereco = enderecoRepository.findById(cliente.getEndereco().getId()).get();
-                endereco.setLogradouro(dto.Logradouro());
-                endereco.setNumero(dto.numero());
-                endereco.setBairro(dto.bairro());
-                endereco.setCep(dto.cep());
-                endereco.setCidade(dto.cidade());
-                endereco.setEstado(dto.estado());
-                enderecoRepository.save(endereco);
-                Backup backup = new Backup();
-                backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_CLIENTE);
-                backup.setDataEvento(LocalDateTime.now());
-                backup.setCliente(cliente);
-                backupRepository.save(backup);
-                return new ResponseEntity<>(CREATED);
+                if(clienteRepository.existsById(id))
+                {
+                    Cliente cliente = clienteRepository.findById(id).get();
+                    Endereco endereco = enderecoRepository.findById(cliente.getEndereco().getId()).get();
+                    endereco.setLogradouro(dto.Logradouro());
+                    endereco.setNumero(dto.numero());
+                    endereco.setBairro(dto.bairro());
+                    endereco.setCep(dto.cep());
+                    endereco.setCidade(dto.cidade());
+                    endereco.setEstado(dto.estado());
+                    enderecoRepository.save(endereco);
+                    Backup backup = new Backup();
+                    backup.setAcaoBackup(SelecionarAcaoBackup.EDITAR_CLIENTE);
+                    backup.setDataEvento(LocalDateTime.now());
+                    backup.setCliente(cliente);
+                    backupRepository.save(backup);
+                    ClienteDTO response = new ClienteDTO(cliente.getNome(), cliente.getSobrenome(), cliente.getTelefone(),
+                            cliente.getDataNascimento(), cliente.getEmail(), cliente.getEndereco().getLogradouro(),
+                            cliente.getEndereco().getNumero(),cliente.getEndereco().getBairro(),cliente.getEndereco().getCep(),
+                            cliente.getEndereco().getCidade(),cliente.getEndereco().getEstado() );
+                    return new ResponseEntity<>(response,OK);
+                }
+                else {throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else {throw new NullargumentsException();}
         }catch (Exception e)
         {
             System.out.println("Ops algo deu errado!");
@@ -227,16 +264,23 @@ public class ClienteService {
     {
         try
         {
-            if(clienteRepository.existsById(id))
+            if(id != null)
             {
-                clienteRepository.deleteById(id);
+                if(clienteRepository.existsById(id))
+                {
+                    clienteRepository.deleteById(id);
+                    return new ResponseEntity<>(OK);
+                }
+                else {throw new EntityNotFoundException();}
             }
-            return new ResponseEntity<>(OK);
+            else {throw new NullargumentsException();}
+
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao deletar");
+            e.getMessage();
         }
+        return null;
     }
 
 }

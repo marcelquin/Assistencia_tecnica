@@ -3,6 +3,8 @@ package baseAPI.API.Sistema.Service;
 import baseAPI.API.Sistema.DTO.OrdemServicoDTO;
 import baseAPI.API.Sistema.Enum.*;
 import baseAPI.API.Sistema.Exceptions.ClientBlockException;
+import baseAPI.API.Sistema.Exceptions.EntityNotFoundException;
+import baseAPI.API.Sistema.Exceptions.NullargumentsException;
 import baseAPI.API.Sistema.Model.*;
 import baseAPI.API.Sistema.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,24 +44,31 @@ public class OrdemServicoService {
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
+        return null;
     }
 
     public ResponseEntity<OrdemServico> BuscarOrdemServicoPorId(Long id) throws Exception
     {
         try
         {
-            if(ordemServicoRepository.existsById(id))
+            if(id != null)
             {
-                OrdemServico ordemServico = ordemServicoRepository.findById(id).get();
-                return new ResponseEntity<>(ordemServico, OK);
+                if(ordemServicoRepository.existsById(id))
+                {
+                    OrdemServico ordemServico = ordemServicoRepository.findById(id).get();
+                    return new ResponseEntity<>(ordemServico, OK);
+                }
+                else { throw new EntityNotFoundException();}
             }
+            else { throw new NullargumentsException();}
+
 
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+           e.getMessage();
         }
         return null;
     }
@@ -68,16 +77,20 @@ public class OrdemServicoService {
     {
         try
         {
-            if(ordemServicoRepository.existsBycodigo(codigo))
+            if(codigo != null)
             {
-                OrdemServico ordemServico = ordemServicoRepository.findBycodigo(codigo);
-                return new ResponseEntity<>(ordemServico, OK);
+                if(ordemServicoRepository.existsBycodigo(codigo))
+                {
+                    OrdemServico ordemServico = ordemServicoRepository.findBycodigo(codigo);
+                    return new ResponseEntity<>(ordemServico, OK);
+                }
+                else { throw new EntityNotFoundException();}
             }
-
+            else { throw new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
         return null;
     }
@@ -115,20 +128,14 @@ public class OrdemServicoService {
                             return new ResponseEntity<>(CREATED);
                         }
                     }
-                    else
-                    {
-                        throw new ClientBlockException("Cliente Boqueado por não finalização de Ordem de serviço anterior");
-                    }
+                    else { throw new ClientBlockException();}
                 }
+                else { throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else { throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
@@ -137,27 +144,21 @@ public class OrdemServicoService {
     public ResponseEntity<OrdemServicoDTO> AnaliseOrdemServico(String codigoOrdemServico,String defeito)
     {
         try{
-            if(codigoOrdemServico != null)
+            if(codigoOrdemServico != null && defeito != null)
             {
                 if(ordemServicoRepository.existsBycodigo(codigoOrdemServico))
                 {
                     OrdemServico ordemServico = ordemServicoRepository.findBycodigo(codigoOrdemServico);
-                    if(defeito != null)
-                    {
-                        ordemServico.setDefeito(defeito);
-                        ordemServico.setValorTotal(ordemServico.CalValorTotal());
-                        ordemServico.setStatusOrdenServico(StatusOrdenServico.AGUARDANDO_APROVACAO);
-                        ordemServico.setDataAnalise(LocalDateTime.now());
-                    }
+                    ordemServico.setDefeito(defeito);
+                    ordemServico.setValorTotal(ordemServico.CalValorTotal());
+                    ordemServico.setStatusOrdenServico(StatusOrdenServico.AGUARDANDO_APROVACAO);
+                    ordemServico.setDataAnalise(LocalDateTime.now());
                     ordemServicoRepository.save(ordemServico);
                     return new ResponseEntity<>(OK);
                 }
-
+                else { throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else { throw new NullargumentsException();}
         }catch (Exception e)
         {
             System.out.println("Ops algo deu errado!");
@@ -170,7 +171,7 @@ public class OrdemServicoService {
     public ResponseEntity<OrdemServicoDTO> AlterarStatusOrdemServico(String codigoOrdemServico, Boolean OSCOnfirmar)
     {
         try{
-            if(codigoOrdemServico != null)
+            if(codigoOrdemServico != null && OSCOnfirmar != null)
             {
               if(ordemServicoRepository.existsBycodigo(codigoOrdemServico))
               {
@@ -194,16 +195,12 @@ public class OrdemServicoService {
                   backupRepository.save(backup);
                   return new ResponseEntity<>(OK);
               }
-
+              else{throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else{throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
@@ -227,12 +224,9 @@ public class OrdemServicoService {
                     backupRepository.save(backup);
                     return new ResponseEntity<>(OK);
                 }
-
-                }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
+                else{throw new EntityNotFoundException();}
             }
+            else{throw new NullargumentsException();}
         }catch (Exception e)
         {
             System.out.println("Ops algo deu errado!");
@@ -245,7 +239,7 @@ public class OrdemServicoService {
     public ResponseEntity<OrdemServicoDTO> FinalizarOrdemServico(String codigo, SelecionarPagamento selecionarPagamento)
     {
         try{
-            if(codigo != null)
+            if(codigo != null && selecionarPagamento != null)
             {
                 if(ordemServicoRepository.existsBycodigo(codigo))
                 {
@@ -262,15 +256,10 @@ public class OrdemServicoService {
                     backup.setDataEvento(LocalDateTime.now());
                     backupRepository.save(backup);
                     return new ResponseEntity<>(OK);
-
-
                 }
-
+                else{throw new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else{throw new NullargumentsException();}
         }catch (Exception e)
         {
             System.out.println("Ops algo deu errado!");
@@ -284,40 +273,53 @@ public class OrdemServicoService {
     {
         try
         {
-            if(ordemServicoRepository.existsBycodigo(codigo))
+            if(codigo != null)
             {
-                OrdemServico ordemServico = ordemServicoRepository.findBycodigo(codigo);
-                ordemServico.setStatusOrdenServico(StatusOrdenServico.PRODUTO_NAO_ENTREGUE);
-                if(clienteRepository.existsById(ordemServico.getCliente().getId()))
+                if(ordemServicoRepository.existsBycodigo(codigo))
                 {
-                    Cliente cliente = clienteRepository.findById(ordemServico.getCliente().getId()).get();
-                    cliente.setBloqueado(true);
-                    clienteRepository.save(cliente);
-                    ordemServicoRepository.save(ordemServico);
+                    OrdemServico ordemServico = ordemServicoRepository.findBycodigo(codigo);
+                    ordemServico.setStatusOrdenServico(StatusOrdenServico.PRODUTO_NAO_ENTREGUE);
+                    if(clienteRepository.existsById(ordemServico.getCliente().getId()))
+                    {
+                        Cliente cliente = clienteRepository.findById(ordemServico.getCliente().getId()).get();
+                        cliente.setBloqueado(true);
+                        clienteRepository.save(cliente);
+                        ordemServicoRepository.save(ordemServico);
+                        return new ResponseEntity<>(OK);
+                    }
+                    else{throw new EntityNotFoundException();}
                 }
+                else{throw new EntityNotFoundException();}
             }
-            return new ResponseEntity<>(OK);
+            else{throw new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao deletar");
+           e.getMessage();
         }
+        return null;
     }
 
     public ResponseEntity<OrdemServicoDTO> DeletarOrdemServico(Long id) throws Exception
     {
         try
         {
-            if(ordemServicoRepository.existsById(id))
+            if(id != null)
             {
-                ordemServicoRepository.deleteById(id);
+                if(ordemServicoRepository.existsById(id))
+                {
+                    ordemServicoRepository.deleteById(id);
+                    return new ResponseEntity<>(OK);
+                }
+                else{throw new EntityNotFoundException();}
             }
-            return new ResponseEntity<>(OK);
+            else{throw new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao deletar");
+            e.getMessage();
         }
+        return null;
     }
 
 }

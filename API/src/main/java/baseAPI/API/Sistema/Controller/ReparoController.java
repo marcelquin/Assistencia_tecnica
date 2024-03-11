@@ -43,7 +43,7 @@ public class ReparoController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarReparoPorId")
-    public ResponseEntity<Reparo> BuscarReparoPorId(Long id) throws Exception
+    public ResponseEntity<ReparoDTO> BuscarReparoPorId(Long id) throws Exception
     { return  service.BuscarReparoPorId(id);}
 
     @Operation(summary = "Salva novo Registro na tabela", method = "POST")

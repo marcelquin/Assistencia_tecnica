@@ -3,6 +3,8 @@ package baseAPI.API.Sistema.Service;
 import baseAPI.API.Sistema.DTO.OrdemServicoDTO;
 import baseAPI.API.Sistema.DTO.PedidoDTO;
 import baseAPI.API.Sistema.DTO.ReparoDTO;
+import baseAPI.API.Sistema.Exceptions.EntityNotFoundException;
+import baseAPI.API.Sistema.Exceptions.NullargumentsException;
 import baseAPI.API.Sistema.Model.OrdemServico;
 import baseAPI.API.Sistema.Model.Pedido;
 import baseAPI.API.Sistema.Model.Reparo;
@@ -10,6 +12,7 @@ import baseAPI.API.Sistema.Repository.OrdemServicoRepository;
 import baseAPI.API.Sistema.Repository.PedidoRepositoty;
 import baseAPI.API.Sistema.Repository.ReparoRepositoty;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -38,24 +41,30 @@ public class ReparoService {
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
+        return null;
     }
 
-    public ResponseEntity<Reparo> BuscarReparoPorId(Long id) throws Exception
+    public ResponseEntity<ReparoDTO> BuscarReparoPorId(Long id) throws Exception
     {
         try
         {
-            if(reparoRepositoty.existsById(id))
+            if(id != null)
             {
-                Reparo reparo = reparoRepositoty.findById(id).get();
-                return new ResponseEntity<>(reparo, OK);
+                if(reparoRepositoty.existsById(id))
+                {
+                    Reparo reparo = reparoRepositoty.findById(id).get();
+                    ReparoDTO response = new ReparoDTO(reparo.getDescrisao(),reparo.getValortotalReparo());
+                    return new ResponseEntity<>(response, OK);
+                }
+                else{throw  new EntityNotFoundException();}
             }
-
+            else{throw new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao listar");
+            e.getMessage();
         }
         return null;
     }
@@ -63,28 +72,23 @@ public class ReparoService {
     public ResponseEntity<ReparoDTO> NovoReparo(Long idOrdemServico,ReparoDTO dto)
     {
         try{
-            if(dto != null)
+            if(idOrdemServico != null && dto != null)
             {
-                Reparo reparo = new Reparo(dto);
-                reparoRepositoty.save(reparo);
                 if(ordemServicoRepository.existsById(idOrdemServico))
                 {
-                    System.out.println("salvando aqui");
+                    Reparo reparo = new Reparo(dto);
                     OrdemServico ordemServico = ordemServicoRepository.findById(idOrdemServico).get();
                     ordemServico.setReparo(reparo);
                     ordemServicoRepository.save(ordemServico);
-                    System.out.println("Salvou aqui");
+                    ReparoDTO response = new ReparoDTO(reparo.getDescrisao(),reparo.getValortotalReparo());
+                    return new ResponseEntity<>(response, CREATED);
                 }
-                return new ResponseEntity<>(CREATED);
+                else{throw  new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else{throw new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
@@ -92,11 +96,11 @@ public class ReparoService {
     public ResponseEntity<ReparoDTO> NovoPedido(Long idReparo,PedidoDTO dto)
     {
         try{
-            if(reparoRepositoty.existsById(idReparo))
+            if(idReparo != null && dto != null)
             {
-                Reparo reparo = reparoRepositoty.findById(idReparo).get();
-                if(dto != null)
+                if(reparoRepositoty.existsById(idReparo))
                 {
+                    Reparo reparo = reparoRepositoty.findById(idReparo).get();
                     Pedido pedido = new Pedido(dto);
                     pedidoRepositoty.save(pedido);
                     List<Pedido> pedidos = new ArrayList<>();
@@ -104,18 +108,15 @@ public class ReparoService {
                     reparo.getPedidos().addAll(pedidos);
                     reparo.setValortotalReparo(reparo.CalvalortotalReparo());
                     reparoRepositoty.save(reparo);
-                    return new ResponseEntity<>(CREATED);
+                    ReparoDTO response = new ReparoDTO(reparo.getDescrisao(),reparo.getValortotalReparo());
+                    return new ResponseEntity<>(response, OK);
                 }
-
+                else{throw  new EntityNotFoundException();}
             }
-            else
-            {
-                return new ResponseEntity<>(BAD_REQUEST);
-            }
+            else{throw  new NullargumentsException();}
         }catch (Exception e)
         {
-            System.out.println("Ops algo deu errado!");
-            e.getStackTrace();
+            e.getMessage();
         }
         return null;
     }
@@ -124,15 +125,21 @@ public class ReparoService {
     {
         try
         {
-            if(reparoRepositoty.existsById(id))
+            if(id != null)
             {
-                reparoRepositoty.deleteById(id);
+                if(reparoRepositoty.existsById(id))
+                {
+                    reparoRepositoty.deleteById(id);
+                    return new ResponseEntity<>(OK);
+                }
+                else{throw  new EntityNotFoundException();}
             }
-            return new ResponseEntity<>(OK);
+            else{throw  new NullargumentsException();}
         }
         catch (Exception e)
         {
-            throw new Exception("erro ao deletar");
+            e.getMessage();
         }
+        return null;
     }
 }

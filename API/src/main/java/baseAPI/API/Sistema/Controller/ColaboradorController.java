@@ -48,7 +48,7 @@ public class ColaboradorController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarColaboradoresPorId")
-    public ResponseEntity<Colaborador> BuscarColaboradoresPorId(@RequestParam Long id) throws Exception
+    public ResponseEntity<ColaboradorDTO> BuscarColaboradoresPorId(@RequestParam Long id) throws Exception
     { return service.BuscarColaboradoresPorId(id);}
 
 
@@ -60,7 +60,7 @@ public class ColaboradorController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @GetMapping("/BuscarColaboradoresPorCpf")
-    public ResponseEntity<Colaborador> BuscarColaboradoresPorCpf(@RequestParam Long cpf) throws Exception
+    public ResponseEntity<ColaboradorDTO> BuscarColaboradoresPorCpf(@RequestParam Long cpf) throws Exception
     { return service.BuscarColaboradoresPorCpf(cpf);}
 
     @Operation(summary = "Salva Novo Registro na tabela", method = "POST")
@@ -104,7 +104,7 @@ public class ColaboradorController {
             @ApiResponse(responseCode = "500", description = "Ops algoo deu errado"),
     })
     @PutMapping(value = "/AdicionarArquivoColaborador", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ColaboradorDTO> AdicionarArquivoColaborador(@RequestParam Long id, @RequestPart MultipartFile[] files)
+    public ResponseEntity<ColaboradorDTO> AdicionarArquivoColaborador(@RequestParam Long id, @RequestPart MultipartFile[] files) throws IOException
     { return service.AdicionarArquivoColaborador(id, files);}
 
     @Operation(summary = "Deleta Registro na tabela", method = "DELETE")
